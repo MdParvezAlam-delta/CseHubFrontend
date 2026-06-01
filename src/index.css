@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  /* Default Dark Mode Variables */
+  --color-background: #090d16;
+  --color-on-surface: #f1f5f9;
+  --color-on-surface-variant: #94a3b8;
+  --color-primary: #3b82f6;
+  --color-on-primary: #ffffff;
+  --color-primary-container: rgba(59, 130, 246, 0.15);
+  --color-on-primary-container: #60a5fa;
+  --color-tertiary: #10b981;
+  --color-tertiary-container: rgba(16, 185, 129, 0.15);
+  --color-secondary-fixed-dim: #a78bfa;
+  --color-secondary-container: rgba(167, 139, 250, 0.15);
+  --color-outline-variant: rgba(255, 255, 255, 0.08);
+
+  /* Light Mode Overrides */
+  --color-background-light: #f8fafc;
+  --color-on-surface-light: #0f172a;
+  --color-on-surface-variant-light: #475569;
+  --color-primary-container-light: rgba(59, 130, 246, 0.1);
+  --color-on-primary-container-light: #2563eb;
+  --color-outline-variant-light: rgba(0, 0, 0, 0.08);
+}
+
+/* Apply light mode utilities when .light wrapper class exists */
+.light {
+  --color-background: var(--color-background-light);
+  --color-on-surface: var(--color-on-surface-light);
+  --color-on-surface-variant: var(--color-on-surface-variant-light);
+  --color-primary-container: var(--color-primary-container-light);
+  --color-on-primary-container: var(--color-on-primary-container-light);
+  --color-outline-variant: var(--color-outline-variant-light);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-on-surface);
+    min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
