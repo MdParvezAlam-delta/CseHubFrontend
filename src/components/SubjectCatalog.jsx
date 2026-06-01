@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
+import SEO from './common/SEO'; // Import SEO component
+import Pagination from './common/Pagination';
 
 function SubjectCatalog() {
   const subjects = [
@@ -21,7 +23,15 @@ function SubjectCatalog() {
     { name: "Big Data", icon: "analytics", desc: "Processing massive datasets with Hadoop/Spark." },
     { name: "High Perf Computing", icon: "rocket_launch", desc: "Parallel processing and cluster optimization." },
     { name: "Cryptography", icon: "enhanced_encryption", desc: "Secure communication and encryption algorithms." },
-    { name: "Distributed Systems", icon: "lan", desc: "Consensus protocols and distributed state." }
+    { name: "Distributed Systems", icon: "lan", desc: "Consensus protocols and distributed state." },
+    { name: "Natural Language Processing", icon: "translate", desc: "Text analysis, sentiment detection, and language models." },
+    { name: "Cloud Computing", icon: "cloud_queue", desc: "AWS, Azure, GCP services and serverless architectures." },
+    { name: "DevOps", icon: "build_circle", desc: "CI/CD pipelines, containerization, and infrastructure as code." },
+    { name: "Mobile Development", icon: "phone_android", desc: "React Native, Flutter, and native iOS/Android apps." },
+    { name: "Game Development", icon: "gamepad", desc: "Unity, Unreal Engine, and real-time interactive systems." },
+    { name: "Computer Vision", icon: "visibility", desc: "Image recognition, object detection, and video analysis." },
+    { name: "Reinforcement Learning", icon: "switch_access", desc: "Agent-based learning through rewards and environments." },
+    { name: "Data Engineering", icon: "transfer_within_a_station", desc: "Data pipelines, ETL processes, and warehousing." }
   ];
 
   const prioritySubjects = [
@@ -58,6 +68,15 @@ function SubjectCatalog() {
     }
   ];
 
+  // Pagination State Management
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  // Computation for sliced items
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentSubjects = subjects.slice(indexOfFirstItem, indexOfLastItem);
+
   const getColorClasses = (color) => {
     const colors = {
       primary: { bg: "bg-primary-container", text: "text-primary", progress: "bg-primary" },
@@ -69,72 +88,93 @@ function SubjectCatalog() {
   };
 
   return (
-    <section className="max-w-7xl mx-auto px-6">
-      <div className="flex items-end justify-between mb-12">
-        <div>
-          <span className="text-xs font-bold text-primary uppercase mb-2 block tracking-widest">Repository Access</span>
-          <h2 className="text-3xl font-black text-on-surface">Subject Catalog</h2>
-        </div>
-        <div className="flex gap-2">
-          <button className="p-2 border border-outline-variant rounded hover:bg-white/5">
-            <span className="material-symbols-outlined text-on-surface">grid_view</span>
-          </button>
-          <button className="p-2 border border-outline-variant rounded hover:bg-white/5">
-            <span className="material-symbols-outlined text-on-surface">list</span>
-          </button>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Priority Subjects */}
-        {prioritySubjects.map((sub, index) => {
-          const colors = getColorClasses(sub.color);
-          return (
-            <div key={index} className="glass-panel p-6 rounded-xl group hover:border-primary/50 transition-all cursor-pointer reveal-item">
-              <div className={`w-12 h-12 rounded ${colors.bg} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                <span className={`material-symbols-outlined ${colors.text}`}>{sub.icon}</span>
-              </div>
-              <h3 className="text-lg font-bold mb-2 text-on-surface">{sub.name}</h3>
-              <p className="text-sm text-on-surface-variant mb-6 line-clamp-2">{sub.desc}</p>
-              
-              {sub.progress !== undefined && (
-                <>
-                  <div className="w-full bg-white/5 h-1 rounded-full mb-4">
-                    <div 
-                      className={`${colors.progress} h-full rounded-full`}
-                      style={{ width: `${sub.progress}%` }}
-                    ></div>
-                  </div>
-                  <button className="w-full py-2 bg-white/5 hover:bg-primary hover:text-on-primary text-xs font-bold uppercase tracking-widest transition-all rounded text-on-surface">
-                    Continue {sub.progress}%
-                  </button>
-                </>
-              )}
-              
-              {sub.buttonType === "start" && (
-                <button className="w-full py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest transition-all rounded neon-glow">
-                  Start Course
-                </button>
-              )}
-            </div>
-          );
-        })}
-        
-        {/* Generated Subjects */}
-        {subjects.map((sub, index) => (
-          <div key={index} className="glass-panel p-6 rounded-xl group hover:border-primary/30 transition-all cursor-pointer reveal-item">
-            <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
-              <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-xl">{sub.icon}</span>
-            </div>
-            <h3 className="text-base font-bold mb-2 text-on-surface">{sub.name}</h3>
-            <p className="text-xs text-on-surface-variant mb-6 line-clamp-2">{sub.desc}</p>
-            <button className="w-full py-2 bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-[0.15em] transition-all rounded border border-white/5 text-on-surface">
-              Access Module
+    <>
+      {/* SEO Component */}
+      <SEO
+        title="Subject Catalog | Computer Science Courses"
+        description="Browse 28+ computer science courses including Algorithms, Data Structures, Cloud Computing, DevOps, Frontend Development, Backend Systems, and more. Start learning now!"
+        keywords="algorithms, data structures, cloud computing, devops, frontend development, backend systems, computer networks, operating systems, OOPS, database, computer science courses"
+        canonicalUrl="https://yoursite.com/"
+      />
+
+      <section className="max-w-7xl mx-auto px-6">
+        <div className="flex items-end justify-between mb-12">
+          <div>
+            <span className="text-xs font-bold text-primary uppercase mb-2 block tracking-widest">Repository Access</span>
+            <h2 className="text-3xl font-black text-on-surface">Subject Catalog</h2>
+          </div>
+          <div className="flex gap-2">
+            <button className="p-2 border border-outline-variant rounded hover:bg-white/5">
+              <span className="material-symbols-outlined text-on-surface">grid_view</span>
+            </button>
+            <button className="p-2 border border-outline-variant rounded hover:bg-white/5">
+              <span className="material-symbols-outlined text-on-surface">list</span>
             </button>
           </div>
-        ))}
-      </div>
-    </section>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Only Render Priority Subjects on Page 1 */}
+          {currentPage === 1 && prioritySubjects.map((sub, index) => {
+            const colors = getColorClasses(sub.color);
+            return (
+              <div key={index} className="glass-panel p-6 rounded-xl group hover:border-primary/50 transition-all cursor-pointer reveal-item">
+                <div className={`w-12 h-12 rounded ${colors.bg} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                  <span className={`material-symbols-outlined ${colors.text}`}>{sub.icon}</span>
+                </div>
+                <h3 className="text-lg font-bold mb-2 text-on-surface">{sub.name}</h3>
+                <p className="text-sm text-on-surface-variant mb-6 line-clamp-2">{sub.desc}</p>
+
+                {sub.progress !== undefined && (
+                  <>
+                    <div className="w-full bg-white/5 h-1 rounded-full mb-4">
+                      <div
+                        className={`${colors.progress} h-full rounded-full`}
+                        style={{ width: `${sub.progress}%` }}
+                      ></div>
+                    </div>
+                    <button className="w-full py-2 bg-white/5 hover:bg-primary hover:text-on-primary text-xs font-bold uppercase tracking-widest transition-all rounded text-on-surface">
+                      Continue {sub.progress}%
+                    </button>
+                  </>
+                )}
+
+                {sub.buttonType === "start" && (
+                  <button className="w-full py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest transition-all rounded neon-glow">
+                    Start Course
+                  </button>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Render Paginated Generated Subjects */}
+          {currentSubjects.map((sub, index) => (
+            <div key={index} className="glass-panel p-6 rounded-xl group hover:border-primary/30 transition-all cursor-pointer reveal-item">
+              <div className="w-10 h-10 rounded bg-white/10 flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+                <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-xl">{sub.icon}</span>
+              </div>
+              <h3 className="text-base font-bold mb-2 text-on-surface">{sub.name}</h3>
+              <p className="text-xs text-on-surface-variant mb-6 line-clamp-2">{sub.desc}</p>
+              <button className="w-full py-2 bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-[0.15em] transition-all rounded border border-white/5 text-on-surface">
+                Access Module
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Pagination Controls Footer */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={subjects.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={(page) => {
+            setCurrentPage(page);
+            window.scrollTo({ top: 300, behavior: 'smooth' });
+          }}
+        />
+      </section>
+    </>
   );
 }
 

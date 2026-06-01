@@ -7,9 +7,10 @@ import Footer from './components/Footer';
 import FAB from './components/FAB';
 import SignInLayout from './components/features/auth/layouts/SignInLayout';
 import SignUpLayout from './components/features/auth/layouts/SignUpLayout';
-
-// 1. Corrected imports to target your actual interactive forms
 import SignInForm from './components/features/auth/pages/SignInForm';
+import SignUpForm from './components/features/auth/pages/SignUpForm';
+
+
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
