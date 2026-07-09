@@ -5,6 +5,8 @@ import Hero from './components/Hero';
 import SubjectCatalog from './components/SubjectCatalog';
 import Footer from './components/Footer';
 import FAB from './components/FAB';
+import NotesPage from './pages/NotesPage';
+import ProtectedRoute from './components/ProtectedRoute';
 import SignInLayout from './components/features/auth/layouts/SignInLayout';
 import SignUpLayout from './components/features/auth/layouts/SignUpLayout';
 import SignInForm from './components/features/auth/pages/SignInForm';
@@ -66,6 +68,22 @@ function App() {
           </div>
         ),
       },
+
+      {
+        path: '/notes',
+        element: (
+          <ProtectedRoute redirectTo="/signup">
+            <div className="bg-background text-on-surface min-h-screen">
+              <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+              <main className="pt-24 pb-20">
+                <NotesPage />
+              </main>
+              <Footer />
+            </div>
+          </ProtectedRoute>
+        ),
+      },
+
       {
         path: '/signin',
         element: (

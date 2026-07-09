@@ -40,37 +40,45 @@ function Header({ darkMode, toggleDarkMode, setDarkMode }) {
             {darkMode ? 'light_mode' : 'dark_mode'}
           </button>
 
-          <div className="flex items-center gap-3 ml-2">
-            {isAuthenticated ? (
-              <>
-                <span className="hidden md:inline-block text-sm font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
-                  {user?.name ? `Hi, ${user.name}` : 'Welcome Back'}
-                </span>
-                <button
-                  type="button"
-                  onClick={signOut}
-                  className="text-sm font-bold uppercase tracking-wider border border-outline-variant px-4 py-2 rounded-lg hover:bg-white/5 transition-colors"
-                >
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/signin"
-                  className="text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors px-4 py-2"
-                >
-                  Sign In
-                </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              to={isAuthenticated ? '/notes' : '/signup'}
+              className="text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors px-4 py-2"
+            >
+              Notebook
+            </Link>
+            <div className="flex items-center gap-3 ml-2">
+              {isAuthenticated ? (
+                <>
+                  <span className="hidden md:inline-block text-sm font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
+                    {user?.name ? `Hi, ${user.name}` : 'Welcome Back'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    className="text-sm font-bold uppercase tracking-wider border border-outline-variant px-4 py-2 rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/signin"
+                    className="text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors px-4 py-2"
+                  >
+                    Sign In
+                  </Link>
 
-                <Link
-                  to="/signup"
-                  className="text-sm font-bold uppercase tracking-wider bg-primary text-on-primary px-6 py-2 rounded-lg hover:brightness-110 transition-all"
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
+                  <Link
+                    to="/signup"
+                    className="text-sm font-bold uppercase tracking-wider bg-primary text-on-primary px-6 py-2 rounded-lg hover:brightness-110 transition-all"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 // Protected Route Component - wraps routes that require authentication
-export function ProtectedRoute({ children }) {
+export function ProtectedRoute({ children, redirectTo = '/signin' }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -18,7 +18,7 @@ export function ProtectedRoute({ children }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/signin" replace />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   return children;
