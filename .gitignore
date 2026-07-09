@@ -25,3 +25,9 @@ dist-ssr
 
 package-lock.json
 package.json
+
+.env.example
+
+AUTH_SETUP.md
+BACKEND_SETUP_GUIDE.md
+COMPLETE_AUTH_SYSTEM.md
