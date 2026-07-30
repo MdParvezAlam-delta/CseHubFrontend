@@ -11,6 +11,7 @@ import SignInLayout from './components/features/auth/layouts/SignInLayout';
 import SignUpLayout from './components/features/auth/layouts/SignUpLayout';
 import SignInForm from './components/features/auth/pages/SignInForm';
 import SignUpForm from './components/features/auth/pages/SignUpForm';
+import TodoPage from './pages/TodoPage';
 
 
 
@@ -81,6 +82,19 @@ function App() {
               <Footer />
             </div>
           </ProtectedRoute>
+        ),
+      },
+
+      {
+        path: '/todo',
+        element: (
+          <div className="bg-background text-on-surface min-h-screen">
+            <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+            <main className="pt-24 pb-20">
+              <TodoPage />
+            </main>
+            <Footer />
+          </div>
         ),
       },
 

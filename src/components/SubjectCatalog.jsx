@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import SEO from './common/SEO';
 import Pagination from './common/Pagination';
@@ -7,37 +7,41 @@ import Pagination from './common/Pagination';
 function SubjectCatalog() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchQuery = (searchParams.get('q') || '').trim().toLowerCase();
 
   const subjects = useMemo(
     () => [
-      { name: 'Algorithms', icon: 'mediation', desc: 'Complex problem solving and efficiency analysis.' },
-      { name: 'Compiler Design', icon: 'settings_ethernet', desc: 'Lexical analysis and code generation techniques.' },
-      { name: 'Computer Architecture', icon: 'memory', desc: 'Instruction sets, pipelining, and hardware logic.' },
-      { name: 'Data Structures', icon: 'account_tree', desc: 'Linear and non-linear data organization models.' },
-      { name: 'Frontend Dev', icon: 'devices', desc: 'Modern UI engineering with React and Frameworks.' },
-      { name: 'Backend Systems', icon: 'dns', desc: 'Distributed server-side logic and scalability.' },
-      { name: 'Discrete Maths', icon: 'function', desc: 'Logic, set theory, and computational foundations.' },
-      { name: 'Robotics', icon: 'smart_toy', desc: 'Control systems and machine automation.' },
-      { name: 'Software Testing', icon: 'bug_report', desc: 'QA protocols and automated test suites.' },
-      { name: 'Web Assembly', icon: 'web_asset', desc: 'High-performance web execution via WASM.' },
-      { name: 'Blockchain', icon: 'hub', desc: 'Decentralized ledgers and smart contracts.' },
-      { name: 'UI/UX Design', icon: 'design_services', desc: 'User-centric interaction and visual design.' },
-      { name: 'Edge Computing', icon: 'cloud_sync', desc: 'Low-latency processing at network edges.' },
-      { name: 'System Design', icon: 'architecture', desc: 'Large scale infrastructure and microservices.' },
-      { name: 'Bioinformatics', icon: 'biotech', desc: 'Computational biology and genomic analysis.' },
-      { name: 'Quantum Computing', icon: 'flare', desc: 'Qubits, superposition, and quantum logic.' },
-      { name: 'Big Data', icon: 'analytics', desc: 'Processing massive datasets with Hadoop/Spark.' },
-      { name: 'High Perf Computing', icon: 'rocket_launch', desc: 'Parallel processing and cluster optimization.' },
-      { name: 'Cryptography', icon: 'enhanced_encryption', desc: 'Secure communication and encryption algorithms.' },
-      { name: 'Distributed Systems', icon: 'lan', desc: 'Consensus protocols and distributed state.' },
-      { name: 'Natural Language Processing', icon: 'translate', desc: 'Text analysis, sentiment detection, and language models.' },
-      { name: 'Cloud Computing', icon: 'cloud_queue', desc: 'AWS, Azure, GCP services and serverless architectures.' },
-      { name: 'DevOps', icon: 'build_circle', desc: 'CI/CD pipelines, containerization, and infrastructure as code.' },
-      { name: 'Mobile Development', icon: 'phone_android', desc: 'React Native, Flutter, and native iOS/Android apps.' },
-      { name: 'Game Development', icon: 'gamepad', desc: 'Unity, Unreal Engine, and real-time interactive systems.' },
-      { name: 'Computer Vision', icon: 'visibility', desc: 'Image recognition, object detection, and video analysis.' },
-      { name: 'Reinforcement Learning', icon: 'switch_access', desc: 'Agent-based learning through rewards and environments.' },
-      { name: 'Data Engineering', icon: 'transfer_within_a_station', desc: 'Data pipelines, ETL processes, and warehousing.' }
+      { name: 'Physics', icon: 'science', desc: 'Fundamentals of mechanics, waves, and thermodynamics.' },
+      { name: 'Mathematics 1-A', icon: 'calculate', desc: 'Foundational calculus and algebra for engineering students.' },
+      { name: 'Basic Electrical Engineering', icon: 'electrical_services', desc: 'Circuits, Ohm’s law, and basic power systems.' },
+      { name: 'Chemistry', icon: 'science', desc: 'Chemical reactions, materials science, and experimental principles.' },
+      { name: 'Mathenatics-II', icon: 'functions', desc: 'Integral calculus, differential equations, and vector analysis.' },
+      { name: 'Programming for problem solving', icon: 'terminal', desc: 'Coding logic and algorithmic thinking for practical problems.' },
+      { name: 'English', icon: 'language', desc: 'Communication, grammar, and technical writing skills.' },
+      { name: 'Analog and Digital Electronics', icon: 'memory', desc: 'Analog circuits, digital logic, and electronic systems.' },
+      { name: 'DSA', icon: 'account_tree', desc: 'Data structures and algorithms for efficient computing.' },
+      { name: 'Computer Organisation', icon: 'computer', desc: 'CPU architecture, instruction cycles, and memory systems.' },
+      { name: 'Mathematics-III', icon: 'grid_view', desc: 'Linear algebra, probability, and numerical methods.' },
+      { name: 'AnalogAndDigital Electronics', icon: 'memory', desc: 'Combined analog and digital electronics theory and practice.' },
+      { name: 'Discrete Mathematchics', icon: 'functions', desc: 'Logic, sets, combinatorics, and graph theory fundamentals.' },
+      { name: 'Computer Architecture', icon: 'architecture', desc: 'Processor design, pipelining, and system performance.' },
+      { name: 'Formal Language And Automata', icon: 'code', desc: 'Grammar theory, automata, and language recognition models.' },
+      { name: 'Design and Analysis Algorithm', icon: 'precision_manufacturing', desc: 'Algorithm design strategies and complexity analysis.' },
+      { name: 'Biology', icon: 'biotech', desc: 'Biological systems, cells, and introductory life sciences.' },
+      { name: 'Environment Science', icon: 'eco', desc: 'Ecosystems, sustainability, and environmental studies.' },
+      { name: 'Software Engineering', icon: 'engineering', desc: 'Software development life cycle and quality practices.' },
+      { name: 'Compiler Design', icon: 'settings_ethernet', desc: 'Compiler architecture, parsing, and code generation.' },
+      { name: 'Operating Systems', icon: 'terminal', desc: 'Process management, concurrency, and memory control.' },
+      { name: 'OOP', icon: 'category', desc: 'Object-oriented programming and design principles.' },
+      { name: 'Introduction to Industrial management', icon: 'business', desc: 'Basics of industrial planning and organizational management.' },
+      { name: 'Artificial Intelligence', icon: 'smart_toy', desc: 'AI concepts, learning models, and intelligent systems.' },
+      { name: 'DBMS', icon: 'storage', desc: 'Database design, SQL, and data management systems.' },
+      { name: 'Computer Networks', icon: 'router', desc: 'Network protocols, OSI layers, and communication systems.' },
+      { name: 'DWDM', icon: 'share', desc: 'Optical communication using wavelength division multiplexing.' },
+      { name: 'Advanced Algorithm', icon: 'insights', desc: 'Advanced algorithm techniques and optimization strategies.' },
+      { name: 'HRD', icon: 'people', desc: 'Human resource development and organizational skills.' },
+      { name: 'Research Methodology', icon: 'psychology', desc: 'Research design, methods, and academic investigation.' }
     ],
     []
   );
@@ -52,6 +56,24 @@ function SubjectCatalog() {
     []
   );
 
+  const filteredSubjects = useMemo(() => {
+    if (!searchQuery) return subjects;
+    return subjects.filter(
+      (s) =>
+        s.name.toLowerCase().includes(searchQuery) ||
+        s.desc.toLowerCase().includes(searchQuery)
+    );
+  }, [subjects, searchQuery]);
+
+  const filteredPrioritySubjects = useMemo(() => {
+    if (!searchQuery) return prioritySubjects;
+    return prioritySubjects.filter(
+      (s) =>
+        s.name.toLowerCase().includes(searchQuery) ||
+        s.desc.toLowerCase().includes(searchQuery)
+    );
+  }, [prioritySubjects, searchQuery]);
+
   const itemsPerPage = 4;
   const [currentPage, setCurrentPage] = useState(1);
   const [visibleCount, setVisibleCount] = useState(8);
@@ -62,7 +84,7 @@ function SubjectCatalog() {
     setCurrentPage(1);
     setVisibleCount(8);
     setLoadingMore(false);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, searchQuery]);
 
   useEffect(() => {
     if (isAuthenticated || !infiniteLoaderRef.current) return;
@@ -98,8 +120,10 @@ function SubjectCatalog() {
   };
 
   const baseSubjects = isAuthenticated
-    ? subjects.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-    : Array.from({ length: visibleCount }, (_, i) => subjects[i % subjects.length]);
+    ? filteredSubjects.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    : (filteredSubjects.length > 0
+        ? Array.from({ length: visibleCount }, (_, i) => filteredSubjects[i % filteredSubjects.length])
+        : []);
 
   return (
     <>
@@ -115,71 +139,84 @@ function SubjectCatalog() {
           <div>
             <span className="text-xs font-bold text-primary uppercase mb-2 block tracking-widest">Repository Access</span>
             <h2 className="text-3xl font-black text-on-surface">Subject Catalog</h2>
+            {searchQuery && (
+              <p className="text-sm text-on-surface-variant mt-2">
+                Showing results for "{searchQuery}" ({filteredSubjects.length} found)
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {isAuthenticated && currentPage === 1 && prioritySubjects.map((sub, index) => {
-            const colors = getColorClasses(sub.color);
-            return (
-              <div key={index} onClick={handleSubjectClick} className="glass-panel p-6 rounded-xl group hover:border-primary/50 transition-all cursor-pointer reveal-item">
-                <div className={`w-12 h-12 rounded ${colors.bg} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                  <span className={`material-symbols-outlined ${colors.text}`}>{sub.icon}</span>
-                </div>
-                <h3 className="text-lg font-bold mb-2 text-on-surface">{sub.name}</h3>
-                <p className="text-sm text-on-surface-variant mb-6 line-clamp-2">{sub.desc}</p>
-                {sub.progress !== undefined && (
-                  <>
-                    <div className="w-full bg-white/5 h-1 rounded-full mb-4">
-                      <div className={`${colors.progress} h-full rounded-full`} style={{ width: `${sub.progress}%` }} />
+        {searchQuery && filteredSubjects.length === 0 ? (
+          <div className="text-center py-16 text-on-surface-variant">
+            No subjects found matching "{searchQuery}".
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {isAuthenticated && currentPage === 1 && filteredPrioritySubjects.map((sub, index) => {
+                const colors = getColorClasses(sub.color);
+                return (
+                  <div key={index} onClick={handleSubjectClick} className="glass-panel p-6 rounded-xl group hover:border-primary/50 transition-all cursor-pointer reveal-item">
+                    <div className={`w-12 h-12 rounded ${colors.bg} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                      <span className={`material-symbols-outlined ${colors.text}`}>{sub.icon}</span>
                     </div>
-                    <button className="w-full py-2 bg-white/5 hover:bg-primary hover:text-on-primary text-xs font-bold uppercase tracking-widest transition-all rounded text-on-surface">
-                      Continue {sub.progress}%
-                    </button>
-                  </>
-                )}
-                {sub.buttonType === 'start' && (
-                  <button className="w-full py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest transition-all rounded neon-glow">
-                    Start Course
+                    <h3 className="text-lg font-bold mb-2 text-on-surface">{sub.name}</h3>
+                    <p className="text-sm text-on-surface-variant mb-6 line-clamp-2">{sub.desc}</p>
+                    {sub.progress !== undefined && (
+                      <>
+                        <div className="w-full bg-white/5 h-1 rounded-full mb-4">
+                          <div className={`${colors.progress} h-full rounded-full`} style={{ width: `${sub.progress}%` }} />
+                        </div>
+                        <button className="w-full py-2 bg-white/5 hover:bg-primary hover:text-on-primary text-xs font-bold uppercase tracking-widest transition-all rounded text-on-surface">
+                          Continue {sub.progress}%
+                        </button>
+                      </>
+                    )}
+                    {sub.buttonType === 'start' && (
+                      <button className="w-full py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest transition-all rounded neon-glow">
+                        Start Course
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+
+              {baseSubjects.map((sub, index) => (
+                <div
+                  key={`${sub.name}-${index}`}
+                  onClick={handleSubjectClick}
+                  className="glass-panel p-6 rounded-xl group hover:border-primary/30 transition-all cursor-pointer reveal-item"
+                >
+                  <div className="w-10 h-10 rounded bg-white/10 flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+                    <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-xl">
+                      {sub.icon}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold mb-2 text-on-surface">{sub.name}</h3>
+                  <p className="text-xs text-on-surface-variant mb-6 line-clamp-2">{sub.desc}</p>
+                  <button className="w-full py-2 bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-[0.15em] transition-all rounded border border-white/5 text-on-surface">
+                    Access Module
                   </button>
-                )}
-              </div>
-            );
-          })}
-
-          {baseSubjects.map((sub, index) => (
-            <div
-              key={`${sub.name}-${index}`}
-              onClick={handleSubjectClick}
-              className="glass-panel p-6 rounded-xl group hover:border-primary/30 transition-all cursor-pointer reveal-item"
-            >
-              <div className="w-10 h-10 rounded bg-white/10 flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
-                <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-xl">
-                  {sub.icon}
-                </span>
-              </div>
-              <h3 className="text-base font-bold mb-2 text-on-surface">{sub.name}</h3>
-              <p className="text-xs text-on-surface-variant mb-6 line-clamp-2">{sub.desc}</p>
-              <button className="w-full py-2 bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-[0.15em] transition-all rounded border border-white/5 text-on-surface">
-                Access Module
-              </button>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {!isAuthenticated && <div ref={infiniteLoaderRef} className="h-20" />}
+            {!isAuthenticated && <div ref={infiniteLoaderRef} className="h-20" />}
 
-        {loadingMore && !isAuthenticated && (
-          <div className="mt-8 text-center text-sm text-on-surface-variant">Loading more subjects...</div>
-        )}
+            {loadingMore && !isAuthenticated && (
+              <div className="mt-8 text-center text-sm text-on-surface-variant">Loading more subjects...</div>
+            )}
 
-        {isAuthenticated && (
-          <Pagination
-            currentPage={currentPage}
-            totalItems={subjects.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={handlePageChange}
-          />
+            {isAuthenticated && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={filteredSubjects.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </>
         )}
       </section>
     </>

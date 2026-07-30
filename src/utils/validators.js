@@ -3,10 +3,10 @@
 export const validators = {
   // Email validation
   isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const emailRegex = /^[^\s@]+@[^\s@]+$/;
+  return emailRegex.test(email);
   },
-
+  
   // Password validation - minimum 8 characters, at least 1 uppercase, 1 lowercase, 1 number
   isValidPassword(password) {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;

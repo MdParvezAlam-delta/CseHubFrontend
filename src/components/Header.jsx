@@ -1,13 +1,30 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 function Header({ darkMode, toggleDarkMode, setDarkMode }) {
   const { user, isAuthenticated, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [searchTerm, setSearchTerm] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('q') || '';
+  });
 
   const handleToggle = () => {
     if (typeof toggleDarkMode === 'function') return toggleDarkMode();
     if (typeof setDarkMode === 'function') return setDarkMode(!darkMode);
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    if (value.trim()) {
+      navigate(`/?q=${encodeURIComponent(value)}`);
+    } else {
+      navigate('/');
+    }
   };
 
   return (
@@ -26,6 +43,8 @@ function Header({ darkMode, toggleDarkMode, setDarkMode }) {
               className="bg-on-surface/5 border border-outline-variant rounded-lg px-9 py-2 text-sm text-on-surface focus:outline-none w-full transition-all"
               placeholder="Quick Search for protocols, modules..."
               type="text"
+              value={searchTerm}
+              onChange={handleSearchChange}
             />
           </div>
         </div>
@@ -46,6 +65,12 @@ function Header({ darkMode, toggleDarkMode, setDarkMode }) {
               className="text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors px-4 py-2"
             >
               Notebook
+            </Link>
+            <Link
+              to="/todo"
+              className="text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors px-4 py-2"
+            >
+              Todo
             </Link>
             <div className="flex items-center gap-3 ml-2">
               {isAuthenticated ? (
