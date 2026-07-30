@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 function TodoList() {
   const [todos, setTodos] = useState([]);
   const [title, setTitle] = useState('');
@@ -22,7 +24,7 @@ function TodoList() {
       
       if (token && isAuthenticated) {
         console.log('Fetching todos from API...');
-        const res = await axios.get('http://localhost:5000/api/todos', {
+        const res = await axios.get(`${API_URL}/todos`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         console.log('Todos received:', res.data.todos);
@@ -61,7 +63,7 @@ function TodoList() {
     const token = localStorage.getItem('csehub-token') || localStorage.getItem('token');
     try {
       const res = await axios.post(
-        'http://localhost:5000/api/todos',
+        `${API_URL}/todos`,
         { title },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -84,7 +86,7 @@ function TodoList() {
     const token = localStorage.getItem('csehub-token') || localStorage.getItem('token');
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/todos/${todo._id}`,
+        `${API_URL}/todos/${todo._id}`,
         { completed: !todo.completed, title: todo.title },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -109,7 +111,7 @@ function TodoList() {
     const token = localStorage.getItem('csehub-token') || localStorage.getItem('token');
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/todos/${todoId}`,
+        `${API_URL}/todos/${todoId}`,
         { title: editingTitle, completed: todos.find(t => t._id === todoId)?.completed },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -131,7 +133,7 @@ function TodoList() {
   const deleteTodo = async (id) => {
     const token = localStorage.getItem('csehub-token') || localStorage.getItem('token');
     try {
-      await axios.delete(`http://localhost:5000/api/todos/${id}`, {
+      await axios.delete(`${API_URL}/todos/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTodos(todos.filter(todo => todo._id !== id));
@@ -151,7 +153,7 @@ function TodoList() {
       <div className="text-red-500 text-center">
         <p className="font-semibold">Error loading todos</p>
         <p className="text-sm">{error}</p>
-        <p className="text-xs mt-2">Make sure the backend server is running on http://localhost:5000</p>
+        <p className="text-xs mt-2">Make sure the backend server is reachable.</p>
       </div>
     </div>;
   }
