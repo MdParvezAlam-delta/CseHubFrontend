@@ -25,7 +25,7 @@ dist-ssr
 
 
 
-.env.example
+.env.local
 
 AUTH_SETUP.md
 BACKEND_SETUP_GUIDE.md
