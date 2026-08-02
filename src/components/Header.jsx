@@ -6,6 +6,7 @@ function Header({ darkMode, toggleDarkMode, setDarkMode }) {
   const { user, isAuthenticated, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState(() => {
     const params = new URLSearchParams(location.search);
@@ -16,6 +17,8 @@ function Header({ darkMode, toggleDarkMode, setDarkMode }) {
     if (typeof toggleDarkMode === 'function') return toggleDarkMode();
     if (typeof setDarkMode === 'function') return setDarkMode(!darkMode);
   };
+
+  const handleMobileToggle = () => setMobileOpen((prev) => !prev);
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -49,7 +52,7 @@ function Header({ darkMode, toggleDarkMode, setDarkMode }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleToggle}
@@ -59,23 +62,32 @@ function Header({ darkMode, toggleDarkMode, setDarkMode }) {
             {darkMode ? 'light_mode' : 'dark_mode'}
           </button>
 
-          <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={handleMobileToggle}
+            className="md:hidden material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors p-2 rounded-lg hover:bg-on-surface/5"
+            aria-label="Toggle mobile menu"
+          >
+            {mobileOpen ? 'close' : 'menu'}
+          </button>
+
+          <div className="hidden md:flex items-center gap-4">
             <Link
               to={isAuthenticated ? '/notes' : '/signup'}
-              className="text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors px-4 py-2"
+              className="text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors px-3 py-2"
             >
               Notebook
             </Link>
             <Link
               to="/todo"
-              className="text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors px-4 py-2"
+              className="text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors px-3 py-2"
             >
               Todo
             </Link>
             <div className="flex items-center gap-3 ml-2">
               {isAuthenticated ? (
                 <>
-                  <span className="hidden md:inline-block text-sm font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
+                  <span className="hidden lg:inline-block text-sm font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
                     {user?.name ? `Hi, ${user.name}` : 'Welcome Back'}
                   </span>
                   <button
@@ -90,14 +102,14 @@ function Header({ darkMode, toggleDarkMode, setDarkMode }) {
                 <>
                   <Link
                     to="/signin"
-                    className="text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors px-4 py-2"
+                    className="text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors px-3 py-2"
                   >
                     Sign In
                   </Link>
 
                   <Link
                     to="/signup"
-                    className="text-sm font-bold uppercase tracking-wider bg-primary text-on-primary px-6 py-2 rounded-lg hover:brightness-110 transition-all"
+                    className="text-sm font-bold uppercase tracking-wider bg-primary text-on-primary px-5 py-2 rounded-lg hover:brightness-110 transition-all"
                   >
                     Sign Up
                   </Link>
@@ -107,6 +119,56 @@ function Header({ darkMode, toggleDarkMode, setDarkMode }) {
           </div>
         </div>
       </div>
+
+      {mobileOpen && (
+        <div className="md:hidden bg-background/95 border-t border-outline-variant backdrop-blur-xl px-4 py-4">
+          <div className="space-y-3">
+            <Link
+              to={isAuthenticated ? '/notes' : '/signup'}
+              onClick={() => setMobileOpen(false)}
+              className="block text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors"
+            >
+              Notebook
+            </Link>
+            <Link
+              to="/todo"
+              onClick={() => setMobileOpen(false)}
+              className="block text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors"
+            >
+              Todo
+            </Link>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={() => {
+                  signOut();
+                  setMobileOpen(false);
+                }}
+                className="w-full text-left text-sm font-bold uppercase tracking-wider border border-outline-variant px-3 py-2 rounded-lg text-on-surface-variant hover:bg-white/5 transition-colors"
+              >
+                Sign Out
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <Link
+                  to="/signin"
+                  onClick={() => setMobileOpen(false)}
+                  className="block text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setMobileOpen(false)}
+                  className="block text-sm font-bold uppercase tracking-wider bg-primary text-on-primary px-3 py-2 rounded-lg text-center hover:brightness-110 transition-all"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }

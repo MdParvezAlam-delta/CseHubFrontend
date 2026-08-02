@@ -8,6 +8,7 @@ export default function SignInForm() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [localError, setLocalError] = useState('');
 
@@ -111,18 +112,30 @@ export default function SignInForm() {
               Forgot password?
             </a>
           </div>
-          <input
-            type="password"
-            value={password}
-            onChange={handlePasswordChange}
-            placeholder="********"
-            disabled={isLoading}
-            className={`w-full rounded-xl border bg-[#0b0f19] px-4 py-3 text-white placeholder:text-slate-500 outline-none transition ${
-              errors.password
-                ? 'border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                : 'border-white/10 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={handlePasswordChange}
+              placeholder="********"
+              disabled={isLoading}
+              className={`w-full rounded-xl border bg-[#0b0f19] px-4 py-3 text-white placeholder:text-slate-500 outline-none transition ${
+                errors.password
+                  ? 'border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                  : 'border-white/10 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+              } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+              tabIndex={-1}
+            >
+              <span className="material-symbols-outlined text-lg">
+                {showPassword ? 'visibility_off' : 'visibility'}
+              </span>
+            </button>
+          </div>
           {errors.password && <p className="mt-1 text-xs text-red-400">{errors.password}</p>}
         </div>
 
