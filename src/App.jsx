@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -12,6 +12,9 @@ import SignUpLayout from './components/features/auth/layouts/SignUpLayout';
 import SignInForm from './components/features/auth/pages/SignInForm';
 import SignUpForm from './components/features/auth/pages/SignUpForm';
 import TodoPage from './pages/TodoPage';
+import AdminPage from './pages/AdminPage';
+import ArticlePage from './pages/ArticlePage';
+import { ArticlesProvider } from './context/ArticlesContext';
 
 
 
@@ -42,7 +45,7 @@ function App() {
   useEffect(() => {
     window.__toggleTheme = () => setDarkMode(prev => !prev);
     return () => {
-      try { delete window.__toggleTheme; } catch (e) {}
+      delete window.__toggleTheme;
     };
   }, []);
 
@@ -50,11 +53,7 @@ function App() {
     console.log('theme set:', localStorage.getItem('theme'), 'classes:', document.documentElement.className);
   }, [darkMode]);
 
-  // 2. Updated the Router configuration to swap out the empty placeholders
-  let router;
-  let routerError = null;
-  try {
-    router = createBrowserRouter([
+  const router = createBrowserRouter([
       {
         path: '/',
         element: (
@@ -97,6 +96,28 @@ function App() {
           </div>
         ),
       },
+      {
+        path: '/admin',
+        element: (
+          <div className="bg-background text-on-surface min-h-screen">
+            <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+            <main className="pt-16 pb-20">
+              <AdminPage />
+            </main>
+          </div>
+        ),
+      },
+      {
+        path: '/article/:id',
+        element: (
+          <div className="bg-background text-on-surface min-h-screen">
+            <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+            <main className="pt-16 pb-20">
+              <ArticlePage />
+            </main>
+          </div>
+        ),
+      },
 
       {
         path: '/signin',
@@ -114,23 +135,13 @@ function App() {
           </SignUpLayout>
         ),
       },
-    ]);
-  } catch (err) {
-    console.error('Router creation failed', err);
-    routerError = err && (err.message || String(err));
-  }
+  ]);
 
-  if (routerError) {
-    return (
-      <div style={{ padding: 40 }}>
-        <h2 style={{ color: '#e11d48' }}>Router initialization error</h2>
-        <pre style={{ whiteSpace: 'pre-wrap', color: '#111' }}>{String(routerError)}</pre>
-        <p>Check the dev console and server logs for details.</p>
-      </div>
-    );
-  }
-
-  return <RouterProvider router={router} />;
+  return (
+    <ArticlesProvider>
+      <RouterProvider router={router} />
+    </ArticlesProvider>
+  );
 }
 
 export default App;

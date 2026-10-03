@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -84,6 +84,12 @@ function Header({ darkMode, toggleDarkMode, setDarkMode }) {
             >
               Todo
             </Link>
+            <Link
+              to="/admin"
+              className="text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors px-3 py-2"
+            >
+              Admin
+            </Link>
             <div className="flex items-center gap-3 ml-2">
               {isAuthenticated ? (
                 <>
@@ -136,6 +142,13 @@ function Header({ darkMode, toggleDarkMode, setDarkMode }) {
               className="block text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors"
             >
               Todo
+            </Link>
+            <Link
+              to="/admin"
+              onClick={() => setMobileOpen(false)}
+              className="block text-sm font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors"
+            >
+              Admin
             </Link>
             {isAuthenticated ? (
               <button
