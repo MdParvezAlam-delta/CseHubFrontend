@@ -1,25 +1,11 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import Header from '../../../Header';
 import Footer from '../../../Footer';
 
 export default function SignUpLayout({ children }) {
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-white flex flex-col">
-      <nav className="border-b border-white/10 px-6 py-4 flex items-center justify-between">
-        <Link to="/" className="text-xl font-black tracking-tight">
-          CseHub
-        </Link>
-        <div className="flex items-center gap-4 text-sm">
-          <Link to="/signin" className="text-slate-400 hover:text-white">
-            Sign In
-          </Link>
-          <Link to="/signup" className="font-semibold text-white">
-            Sign Up
-          </Link>
-        </div>
-      </nav>
-
-      <main className="flex-1 flex flex-col lg:flex-row">
+    <div className="flex min-h-screen flex-col bg-[#0b0f19] text-white">
+      <Header />
+      <main className="flex flex-1 flex-col pt-16 lg:flex-row">
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-violet-600 via-fuchsia-700 to-slate-900 items-center justify-center p-12">
           <div className="max-w-md">
             <h1 className="text-5xl font-bold tracking-tight">CseHub</h1>

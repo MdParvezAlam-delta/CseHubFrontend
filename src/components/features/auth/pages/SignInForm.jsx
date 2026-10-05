@@ -1,16 +1,40 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from '../../../../context/AuthContext';
 import { validators } from '../../../../utils/validators';
 
 export default function SignInForm() {
-  const { signIn, isLoading, error: contextError, clearError } = useAuth();
+  const { signIn, signInWithGoogle, isAuthenticated, isLoading, error: contextError, clearError } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [localError, setLocalError] = useState('');
+  const requestedPath = location.state?.from?.pathname
+    || new URLSearchParams(location.search).get('next');
+  const redirectPath = requestedPath?.startsWith('/') && !requestedPath.startsWith('//')
+    ? requestedPath
+    : '/';
+
+  useEffect(() => {
+    if (isAuthenticated && requestedPath) {
+      navigate(redirectPath, { replace: true });
+    }
+  }, [isAuthenticated, navigate, redirectPath, requestedPath]);
+
+  const handleGoogleSignIn = async () => {
+    setLocalError('');
+    clearError();
+    try {
+      await signInWithGoogle(
+        `${window.location.origin}/signin?next=${encodeURIComponent(redirectPath)}`
+      );
+    } catch (err) {
+      setLocalError(err.message);
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -35,7 +59,7 @@ export default function SignInForm() {
 
     try {
       await signIn(email, password);
-      navigate('/');
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       setLocalError(err.message);
     }
@@ -59,8 +83,6 @@ export default function SignInForm() {
     }
   };
 
-  const displayError = localError || contextError;
-
   return (
     <div className="w-full">
       <div className="mb-8">
@@ -70,13 +92,13 @@ export default function SignInForm() {
         </p>
       </div>
 
-      {displayError && (
+      {(localError || contextError) && (
         <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
-          {displayError}
+          {localError || contextError}
         </div>
       )}
 
-      <button className="w-full flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+      <button type="button" onClick={handleGoogleSignIn} disabled={isLoading} className="w-full flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-50">
         <span className="material-symbols-outlined text-[20px]">login</span>
         Continue with Google
       </button>

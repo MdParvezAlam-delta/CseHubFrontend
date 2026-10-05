@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { authService } from '../services/authService';
 
 const AuthContext = createContext(null);
@@ -11,30 +12,33 @@ export function AuthProvider({ children }) {
 
   // Initialize auth state on mount
   useEffect(() => {
+    let cancelled = false;
+
     const initializeAuth = async () => {
       try {
-        const token = localStorage.getItem('csehub-token');
-        if (token) {
-          const isValid = await authService.validateToken();
-          if (isValid) {
-            const profile = await authService.getProfile();
-            setUser(profile.user);
+        const session = await authService.getSession();
+        if (session) {
+          const profile = await authService.getProfile();
+          if (!cancelled) {
+            setUser(profile);
             setIsAuthenticated(true);
-          } else {
-            localStorage.removeItem('csehub-token');
-            setIsAuthenticated(false);
           }
         }
       } catch (err) {
         console.error('Auth initialization failed:', err);
-        localStorage.removeItem('csehub-token');
-        setIsAuthenticated(false);
+        if (!cancelled) {
+          setError(err.message);
+          setIsAuthenticated(false);
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     initializeAuth();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Sign Up
@@ -43,13 +47,13 @@ export function AuthProvider({ children }) {
     setError(null);
     try {
       const response = await authService.signup({ name, email, password });
-      setUser(response.user);
-      setIsAuthenticated(true);
+      setUser(response.user || null);
+      setIsAuthenticated(Boolean(response.user));
       return response;
     } catch (err) {
       const errorMessage = err.message || 'Sign up failed';
       setError(errorMessage);
-      throw new Error(errorMessage);
+      throw new Error(errorMessage, { cause: err });
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +71,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       const errorMessage = err.message || 'Sign in failed';
       setError(errorMessage);
-      throw new Error(errorMessage);
+      throw new Error(errorMessage, { cause: err });
     } finally {
       setIsLoading(false);
     }
@@ -75,10 +79,24 @@ export function AuthProvider({ children }) {
 
   // Sign Out
   const signOut = () => {
-    authService.signout();
-    setUser(null);
-    setIsAuthenticated(false);
+    return authService.signout()
+      .then(() => {
+        setUser(null);
+        setIsAuthenticated(false);
+        setError(null);
+      })
+      .catch((err) => setError(err.message || 'Sign out failed'));
+  };
+
+  const signInWithGoogle = async (redirectTo) => {
     setError(null);
+    try {
+      await authService.signInWithGoogle(redirectTo);
+    } catch (err) {
+      const errorMessage = err.message || 'Google sign-in failed';
+      setError(errorMessage);
+      throw new Error(errorMessage, { cause: err });
+    }
   };
 
   const value = useMemo(
@@ -90,6 +108,7 @@ export function AuthProvider({ children }) {
       signIn,
       signUp,
       signOut,
+      signInWithGoogle,
       clearError: () => setError(null),
     }),
     [user, isAuthenticated, isLoading, error]

@@ -1,16 +1,49 @@
-# React + Vite
+# CSEHub React frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The React app uses the Django API in `cseHub-python` for admin-managed subject cards
+and profile/admin authorization. Supabase Auth signs users in and supplies the JWT
+Django validates. Notebook entries and Todo tasks are stored in separate,
+user-owned Django database tables.
 
-Currently, two official plugins are available:
+## Local setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Copy `.env.example` to `.env.local`.
+2. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from the Supabase project's
+   public API settings. These are browser-safe project values; never put a service-role
+   key in the frontend.
+3. Keep `VITE_API_URL=http://localhost:8000/api` for the local Django backend.
+4. Start the backend from `cseHub-python`:
 
-## React Compiler
+   ```powershell
+   docker compose --profile localdb up --build backend
+   ```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+   Django migrations create the separate `workspace_notes` and `workspace_todos`
+   tables during startup.
 
-## Expanding the ESLint configuration
+5. Start React from this folder:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+   ```powershell
+   npm install
+   npm run dev
+   ```
+
+The local Vite origin `http://localhost:5173` is included in the Docker backend's
+CORS settings. Restart Vite after changing `.env.local`.
+
+## Authentication and administration
+
+In local Vite development, email/password sign-up and sign-in use Django's
+`/api/auth/` endpoints, so test accounts do not require a deliverable email. Django
+stores passwords using its password hashers. This local auth path is disabled when
+Django `DEBUG` is false unless explicitly enabled, and should not be enabled in
+production. Google sign-in continues to use Supabase.
+
+In production builds, email/password and Google sign-in use Supabase Auth. The
+frontend sends the Supabase access token as a bearer token to Django's `/api/me/`
+and subjects API. Subject writes are temporarily open without authentication.
+
+Anyone can open the subject publisher from the **Admin** navigation tab or `/admin`.
+It supports domain selection, Markdown content, language-specific code examples,
+author attribution, and publish date. Django's built-in administration site is at
+`http://localhost:8000/admin/` and uses Django admin credentials/session.

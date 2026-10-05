@@ -1,53 +1,70 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { notesService } from '../services/notesService';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import api from '../services/apiClient';
+import { useAuth } from './AuthContext';
 
-const NotesContext = createContext();
+const NotesContext = createContext(null);
+const normalize = (note) => ({ ...note, _id: note.id });
 
 export const NotesProvider = ({ children }) => {
   const [notes, setNotes] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  const fetchNotes = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const data = await notesService.getAllNotes();
-      setNotes(data.notes || []);
-    } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to load notes');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
-    fetchNotes();
+    if (authLoading) return undefined;
+    let active = true;
+    if (isAuthenticated) {
+      api.get('/notes/')
+        .then(({ data }) => {
+          if (active) setNotes((data.results || data).map(normalize));
+        })
+        .catch((loadError) => {
+          if (active) setError(loadError.message);
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    } else {
+      queueMicrotask(() => {
+        if (active) {
+          setNotes([]);
+          setLoading(false);
+        }
+      });
+    }
+    return () => {
+      active = false;
+    };
+  }, [authLoading, isAuthenticated]);
+
+  const addNote = useCallback(async (noteData) => {
+    const { data } = await api.post('/notes/', noteData);
+    const note = normalize(data);
+    setNotes((current) => [note, ...current]);
+    return note;
   }, []);
 
-  const addNote = async (noteData) => {
-    const data = await notesService.createNote(noteData);
-    setNotes((prev) => [data.note, ...prev]);
-    return data;
-  };
+  const editNote = useCallback(async (id, noteData) => {
+    const { data } = await api.patch(`/notes/${id}/`, noteData);
+    const updated = normalize(data);
+    setNotes((current) => current.map((note) => note._id === id ? updated : note));
+    return updated;
+  }, []);
 
-  const editNote = async (id, noteData) => {
-    const data = await notesService.updateNote(id, noteData);
-    setNotes((prev) => prev.map((n) => (n._id === id ? data.note : n)));
-    return data;
-  };
+  const removeNote = useCallback(async (id) => {
+    await api.delete(`/notes/${id}/`);
+    setNotes((current) => current.filter((note) => note._id !== id));
+  }, []);
 
-  const removeNote = async (id) => {
-    await notesService.deleteNote(id);
-    setNotes((prev) => prev.filter((n) => n._id !== id));
-  };
+  const value = useMemo(
+    () => ({ notes, loading, error, addNote, editNote, removeNote }),
+    [notes, loading, error, addNote, editNote, removeNote]
+  );
 
   return (
-    <NotesContext.Provider
-      value={{ notes, loading, error, fetchNotes, addNote, editNote, removeNote }}
-    >
-      {children}
-    </NotesContext.Provider>
+    <NotesContext.Provider value={value}>{children}</NotesContext.Provider>
   );
 };
 

@@ -1,13 +1,12 @@
-import React from 'react';
 import NoteCard from './NoteCard';
 
 function NoteList({ notes, onEdit, onDelete, onOpen }) {
   if (!notes.length) {
-    return <p className="text-sm opacity-70">No notes found.</p>;
+    return null;
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2">
       {notes.map((note) => (
         <NoteCard
           key={note._id}

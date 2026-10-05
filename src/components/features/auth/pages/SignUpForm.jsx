@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from '../../../../context/AuthContext';
 import { validators } from '../../../../utils/validators';
 
 export default function SignUpForm() {
-  const { signUp, isLoading, error: contextError, clearError } = useAuth();
+  const { signUp, signInWithGoogle, isLoading, error: contextError, clearError } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -15,6 +15,18 @@ export default function SignUpForm() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [errors, setErrors] = useState({});
   const [localError, setLocalError] = useState('');
+  const [localMessage, setLocalMessage] = useState('');
+
+  const handleGoogleSignIn = async () => {
+    setLocalError('');
+    setLocalMessage('');
+    clearError();
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      setLocalError(err.message);
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -43,13 +55,18 @@ export default function SignUpForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLocalError('');
+    setLocalMessage('');
     clearError();
 
     if (!validateForm()) return;
 
     try {
-      await signUp(name, email, password);
-      navigate('/');
+      const result = await signUp(name, email, password);
+      if (result.needsEmailConfirmation) {
+        setLocalMessage('Check your email to confirm your account, then sign in.');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setLocalError(err.message);
     }
@@ -117,8 +134,13 @@ export default function SignUpForm() {
           {displayError}
         </div>
       )}
+      {localMessage && (
+        <div role="status" className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+          {localMessage}
+        </div>
+      )}
 
-      <button className="w-full flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+      <button type="button" onClick={handleGoogleSignIn} disabled={isLoading} className="w-full flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-50">
         <span className="material-symbols-outlined text-[20px]">person</span>
         Continue with Google
       </button>

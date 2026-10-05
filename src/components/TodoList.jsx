@@ -1,304 +1,198 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
+import { useEffect, useMemo, useState } from 'react';
+import api from '../services/apiClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const TAGS = ['Quick', 'Study', 'Code', 'Bug'];
+const sampleTasks = [
+  { title: 'Review data structures notes', tag: 'Study' },
+  { title: 'Solve two graph problems', tag: 'Code' },
+  { title: 'Fix mobile navbar spacing', tag: 'Bug' },
+];
 
-function TodoList() {
+export default function TodoList() {
   const [todos, setTodos] = useState([]);
   const [title, setTitle] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [tag, setTag] = useState('Quick');
   const [editingId, setEditingId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-
-  const fetchTodos = async () => {
-    try {
-      setError(null);
-      const token = localStorage.getItem('csehub-token') || localStorage.getItem('token');
-      console.log('Token found:', !!token);
-      console.log('Is Authenticated:', isAuthenticated);
-      
-      if (token && isAuthenticated) {
-        console.log('Fetching todos from API...');
-        const res = await axios.get(`${API_URL}/todos`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        console.log('Todos received:', res.data.todos);
-        setTodos(res.data.todos);
-      } else {
-        console.log('No token or not authenticated');
-        setTodos([]);
-      }
-    } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch todos';
-      console.error('Failed to fetch todos:', errorMsg);
-      setError(errorMsg);
-      setTodos([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchTodos();
-  }, [isAuthenticated]);
+    let active = true;
+    api.get('/todos/')
+      .then(({ data }) => {
+        if (active) {
+          setError('');
+          setTodos((data.results || data).map((todo) => ({ ...todo, _id: todo.id })));
+        }
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const handleAddTodoClick = (e) => {
-    if (!isAuthenticated) {
-      e.preventDefault();
-      navigate('/signup');
-      return;
-    }
-    addTodo(e);
-  };
+  const completedCount = useMemo(() => todos.filter((todo) => todo.completed).length, [todos]);
 
-  const addTodo = async (e) => {
-    e.preventDefault();
+  const addTodo = async (event) => {
+    event.preventDefault();
     if (!title.trim()) return;
-    
-    const token = localStorage.getItem('csehub-token') || localStorage.getItem('token');
+    setSaving(true);
+    setError('');
     try {
-      const res = await axios.post(
-        `${API_URL}/todos`,
-        { title },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setTodos([res.data.todo, ...todos]);
+      const { data } = await api.post('/todos/', { title: title.trim(), tag, completed: false });
+      setTodos((current) => [{ ...data, _id: data.id }, ...current]);
       setTitle('');
-    } catch (error) {
-      console.error('Failed to add todo:', error);
+    } catch (saveError) {
+      setError(saveError.message);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleToggleTodo = (todo) => {
-    if (!isAuthenticated) {
-      navigate('/signup');
-      return;
-    }
-    toggleTodo(todo);
-  };
-
-  const toggleTodo = async (todo) => {
-    const token = localStorage.getItem('csehub-token') || localStorage.getItem('token');
+  const updateTodo = async (id, changes) => {
+    setError('');
     try {
-      const res = await axios.put(
-        `${API_URL}/todos/${todo._id}`,
-        { completed: !todo.completed, title: todo.title },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setTodos(todos.map(t => (t._id === todo._id ? res.data.todo : t)));
-    } catch (error) {
-      console.error('Failed to update todo:', error);
+      const { data } = await api.patch(`/todos/${id}/`, changes);
+      setTodos((current) => current.map((todo) => todo._id === id ? { ...data, _id: data.id } : todo));
+    } catch (updateError) {
+      setError(updateError.message);
     }
-  };
-
-  const handleEditClick = (todo) => {
-    if (!isAuthenticated) {
-      navigate('/signup');
-      return;
-    }
-    setEditingId(todo._id);
-    setEditingTitle(todo.title);
-  };
-
-  const handleSaveEdit = async (todoId) => {
-    if (!editingTitle.trim()) return;
-    
-    const token = localStorage.getItem('csehub-token') || localStorage.getItem('token');
-    try {
-      const res = await axios.put(
-        `${API_URL}/todos/${todoId}`,
-        { title: editingTitle, completed: todos.find(t => t._id === todoId)?.completed },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setTodos(todos.map(t => (t._id === todoId ? res.data.todo : t)));
-      setEditingId(null);
-    } catch (error) {
-      console.error('Failed to update todo:', error);
-    }
-  };
-
-  const handleDeleteTodo = (id) => {
-    if (!isAuthenticated) {
-      navigate('/signup');
-      return;
-    }
-    deleteTodo(id);
   };
 
   const deleteTodo = async (id) => {
-    const token = localStorage.getItem('csehub-token') || localStorage.getItem('token');
+    setError('');
     try {
-      await axios.delete(`${API_URL}/todos/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTodos(todos.filter(todo => todo._id !== id));
-    } catch (error) {
-      console.error('Failed to delete todo:', error);
+      await api.delete(`/todos/${id}/`);
+      setTodos((current) => current.filter((todo) => todo._id !== id));
+    } catch (deleteError) {
+      setError(deleteError.message);
     }
   };
 
-  if (loading) {
-    return <div className="flex justify-center items-center py-8">
-      <div className="text-gray-500">Loading...</div>
-    </div>;
-  }
+  const saveEdit = async (todoId) => {
+    if (!editingTitle.trim()) return;
+    await updateTodo(todoId, { title: editingTitle.trim() });
+    setEditingId(null);
+    setEditingTitle('');
+  };
 
-  if (error && isAuthenticated) {
-    return <div className="flex justify-center items-center py-8">
-      <div className="text-red-500 text-center">
-        <p className="font-semibold">Error loading todos</p>
-        <p className="text-sm">{error}</p>
-        <p className="text-xs mt-2">Make sure the backend server is reachable.</p>
-      </div>
-    </div>;
-  }
+  const loadSamples = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      for (const sample of sampleTasks) {
+        const { data } = await api.post('/todos/', { ...sample, completed: false });
+        setTodos((current) => [{ ...data, _id: data.id }, ...current]);
+      }
+    } catch (sampleError) {
+      setError(sampleError.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const clearTodos = async () => {
+    if (!todos.length || !window.confirm('Delete all your tasks?')) return;
+    setSaving(true);
+    try {
+      await Promise.all(todos.map((todo) => api.delete(`/todos/${todo._id}/`)));
+      setTodos([]);
+    } catch (clearError) {
+      setError(clearError.message);
+      const { data } = await api.get('/todos/');
+      setTodos((data.results || data).map((todo) => ({ ...todo, _id: todo.id })));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-6">
-     
+    <section className="mx-auto flex max-w-6xl flex-col px-4 py-7 text-slate-100 sm:px-6">
+      <div className="mb-5 flex items-end justify-between gap-4 border-b border-slate-800 pb-4">
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-extrabold"><span className="text-cyan-400">●</span> My To-Do</h1>
+          <p className="mt-1 flex items-center gap-2 text-xs text-slate-400"><span className="material-symbols-outlined text-sm text-cyan-400">info</span> Your tasks are saved to your account.</p>
+        </div>
+        <div className="flex gap-4 rounded-xl border border-slate-700 bg-[#111a2c] px-4 py-2 font-mono text-[10px] text-slate-400">
+          <span>Total: <strong className="text-cyan-300">{todos.length}</strong></span>
+          <span>Completed: <strong className="text-emerald-300">{completedCount}</strong></span>
+        </div>
+      </div>
 
-      {/* My To-Do Section */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-white mb-6">My To-Do</h2>
-        
-        {/* Add Todo Form */}
-        <form onSubmit={handleAddTodoClick} className="flex gap-3 mb-6">
+      {error && <p role="alert" className="mb-4 rounded-lg border border-rose-400/30 bg-rose-400/10 p-3 text-sm text-rose-200">{error}</p>}
+
+      <form onSubmit={addTodo} className="mb-5 rounded-2xl border border-slate-700 bg-[#111a2c] p-4">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <input
+            required
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onClick={() => !isAuthenticated && navigate('/signup')}
-            placeholder={isAuthenticated ? 'Add Task Name...' : 'Login to add a todo'}
-            disabled={!isAuthenticated}
-            className={`flex-1 px-4 py-2 rounded-lg border-2 transition-all ${
-              !isAuthenticated 
-                ? 'border-gray-400 bg-gray-100 text-gray-500 cursor-not-allowed' 
-                : 'border-cyan-400 bg-white text-gray-800 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-300'
-            }`}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="＋  Add task name..."
+            className="min-w-0 flex-1 rounded-xl border border-slate-700 bg-[#0b1426] px-4 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-cyan-400"
           />
-          <button 
-            type="submit"
-            disabled={!isAuthenticated}
-            className={`px-8 py-2 rounded-lg font-semibold transition-all ${
-              isAuthenticated 
-                ? 'bg-cyan-400 text-white hover:bg-cyan-500 cursor-pointer shadow-md hover:shadow-lg' 
-                : 'bg-gray-400 text-white cursor-not-allowed'
-            }`}
-          >
-            Add Task
+          <button type="submit" disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-xs font-bold text-slate-950 transition hover:bg-cyan-300 disabled:opacity-50">
+            <span className="text-base">＋</span> Add Task
           </button>
-        </form>
-
-        {/* Authentication prompt for non-authenticated users */}
-        {!isAuthenticated && todos.length === 0 && (
-          <div className="text-center py-8 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-cyan-200">
-            <p className="text-gray-600 mb-4 font-medium">Sign in or create an account to manage your todos</p>
-            <button
-              onClick={() => navigate('/signup')}
-              className="bg-cyan-400 text-white px-6 py-2 rounded-lg hover:bg-cyan-500 font-semibold transition-all shadow-md"
-            >
-              Sign Up / Login
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px]">
+          <span className="mr-1 text-slate-400">Tag:</span>
+          {TAGS.map((item) => (
+            <button key={item} type="button" onClick={() => setTag(item)} className={`rounded-md border px-2 py-1 ${tag === item ? 'border-cyan-500/40 bg-cyan-500/15 text-cyan-300' : 'border-slate-700 bg-[#0b1426] text-slate-300 hover:border-slate-500'}`}>
+              #{item}
             </button>
+          ))}
+          <div className="ml-auto flex items-center gap-2 text-slate-400">
+            <button type="button" disabled={saving} onClick={loadSamples} className="hover:text-cyan-300 disabled:opacity-50">⇧ Load Sample Tasks</button>
+            <span className="text-slate-700">|</span>
+            <button type="button" disabled={saving} onClick={clearTodos} className="hover:text-rose-300 disabled:opacity-50">Reset to Empty</button>
+          </div>
+        </div>
+      </form>
+
+      <div className="flex min-h-[420px] flex-1 flex-col rounded-2xl border border-slate-800 bg-[#0b1426] p-4 sm:p-6">
+        {loading ? (
+          <div className="flex flex-1 items-center justify-center text-sm text-slate-400">Loading tasks...</div>
+        ) : todos.length ? (
+          <div className="space-y-3">
+            {todos.map((todo) => (
+              <article key={todo._id} className="flex items-center gap-3 rounded-xl border border-slate-700/70 bg-[#111a2c] p-3 sm:p-4">
+                <input type="checkbox" checked={todo.completed} onChange={() => updateTodo(todo._id, { completed: !todo.completed })} aria-label={`Mark ${todo.title} ${todo.completed ? 'incomplete' : 'complete'}`} className="h-4 w-4 accent-cyan-400" />
+                {editingId === todo._id ? (
+                  <div className="flex min-w-0 flex-1 gap-2">
+                    <input value={editingTitle} onChange={(event) => setEditingTitle(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && saveEdit(todo._id)} autoFocus className="min-w-0 flex-1 rounded-lg border border-cyan-500/40 bg-[#0b1426] px-3 py-2 text-sm text-white outline-none" />
+                    <button type="button" onClick={() => saveEdit(todo._id)} className="text-xs text-cyan-300">Save</button>
+                    <button type="button" onClick={() => setEditingId(null)} className="text-xs text-slate-400">Cancel</button>
+                  </div>
+                ) : (
+                  <>
+                    <span className={`min-w-0 flex-1 text-sm ${todo.completed ? 'text-slate-500 line-through' : 'text-slate-100'}`}>{todo.title}</span>
+                    {todo.tag && <span className="rounded border border-slate-700 bg-[#0b1426] px-2 py-1 text-[9px] text-cyan-300">#{todo.tag}</span>}
+                    <button type="button" onClick={() => { setEditingId(todo._id); setEditingTitle(todo.title); }} aria-label="Edit task" className="text-slate-400 hover:text-cyan-300">✎</button>
+                    <button type="button" onClick={() => deleteTodo(todo._id)} aria-label="Delete task" className="text-slate-400 hover:text-rose-300">×</button>
+                  </>
+                )}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-1 flex-col items-center justify-center py-16 text-center">
+            <span className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-500/20 bg-[#142239] text-cyan-400">
+              <span className="material-symbols-outlined text-3xl">assignment_turned_in</span>
+            </span>
+            <h2 className="text-lg font-bold">No todos yet. Add one to get started!</h2>
+            <p className="mt-2 max-w-md text-xs leading-5 text-slate-400">Keep track of quick coding tasks, documentation reading, and developer checklist items in your account.</p>
+            <button type="button" onClick={() => document.querySelector('input[placeholder*="Add task name"]')?.focus()} className="mt-4 rounded-lg border border-cyan-500/30 bg-cyan-500/5 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-cyan-300 hover:bg-cyan-500/10">＋ Create Your First Task</button>
           </div>
         )}
       </div>
-
-      {/* Current Tasks Section */}
-      {todos.length > 0 && (
-        <div>
-          <h3 className="text-xl font-bold text-white mb-4">Current Tasks</h3>
-          
-          <div className="space-y-3">
-            {todos.map(todo => (
-              <div
-                key={todo._id}
-                className="flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
-              >
-                {/* Checkbox */}
-                <input
-                  type="checkbox"
-                  checked={todo.completed}
-                  onChange={() => handleToggleTodo(todo)}
-                  disabled={!isAuthenticated}
-                  className="w-5 h-5 text-cyan-400 rounded cursor-pointer disabled:cursor-not-allowed"
-                />
-
-                {/* Todo Title / Edit Input */}
-                {editingId === todo._id ? (
-                  <div className="flex-1 flex gap-2">
-                    <input
-                      type="text"
-                      value={editingTitle}
-                      onChange={(e) => setEditingTitle(e.target.value)}
-                      className="flex-1 px-3 py-1 border border-cyan-400 rounded focus:outline-none focus:ring-1 focus:ring-cyan-300"
-                      autoFocus
-                    />
-                    <button
-                      onClick={() => handleSaveEdit(todo._id)}
-                      className="px-3 py-1 bg-cyan-400 text-white rounded hover:bg-cyan-500 text-sm font-semibold"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setEditingId(null)}
-                      className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm font-semibold"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <span className={`flex-1 ${todo.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>
-                    {todo.title}
-                  </span>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEditClick(todo)}
-                    disabled={!isAuthenticated || editingId !== null}
-                    title="Edit"
-                    className={`p-2 rounded transition-all ${
-                      isAuthenticated && editingId === null
-                        ? 'text-blue-500 hover:bg-blue-50 cursor-pointer'
-                        : 'text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    ✎
-                  </button>
-
-                  <button
-                    onClick={() => handleDeleteTodo(todo._id)}
-                    disabled={!isAuthenticated}
-                    title="Delete"
-                    className={`p-2 rounded transition-all ${
-                      isAuthenticated
-                        ? 'text-red-500 hover:bg-red-50 cursor-pointer'
-                        : 'text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    🗑
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Empty state for authenticated users */}
-      {isAuthenticated && todos.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No todos yet. Add one to get started!</p>
-        </div>
-      )}
-    </div>
+    </section>
   );
 }
-
-export default TodoList;

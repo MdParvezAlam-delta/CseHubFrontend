@@ -1,10 +1,12 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import SignInLayout from './features/auth/layouts/SignInLayout';
+import SignInForm from './features/auth/pages/SignInForm';
 
 // Protected Route Component - wraps routes that require authentication
-export function ProtectedRoute({ children, redirectTo = '/signin' }) {
-  const { isAuthenticated, isLoading } = useAuth();
+export function ProtectedRoute({ children, redirectTo = '/signin', requireStaff = false }) {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -18,7 +20,15 @@ export function ProtectedRoute({ children, redirectTo = '/signin' }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to={redirectTo} replace />;
+    return <Navigate to={redirectTo} replace state={{ from: location }} />;
+  }
+
+  if (requireStaff && !user?.is_staff) {
+    return (
+      <SignInLayout>
+        <SignInForm />
+      </SignInLayout>
+    );
   }
 
   return children;

@@ -1,86 +1,84 @@
-import axios from 'axios';
+import api, {
+  clearLocalAuthToken,
+  getLocalAuthToken,
+  isLocalAuthEnabled,
+  setLocalAuthToken,
+} from './apiClient';
+import { getSupabase } from './supabase';
 
-// Ensure no trailing slash on base URL
-const rawBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const API_BASE_URL = rawBaseUrl.replace(/\/$/, "");
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('csehub-token');
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-const handleResponse = (response) => response.data;
-
-const handleError = (error) => {
-  if (error.response && error.response.data && error.response.data.message) {
-    throw new Error(error.response.data.message);
-  }
-  throw new Error(error.message || 'An error occurred');
-};
+function throwIfError(error) {
+  if (error) throw new Error(error.message);
+}
 
 export const authService = {
-  async signup(userData) {
-    try {
-      const response = await api.post('/auth/signup', userData);
-      const data = handleResponse(response);
-      if (data.token) {
-        localStorage.setItem('csehub-token', data.token);
-      }
-      return data;
-    } catch (error) {
-      return handleError(error);
+  async signup({ name, email, password }) {
+    if (isLocalAuthEnabled) {
+      const { data } = await api.post('/auth/signup/', { name, email, password });
+      setLocalAuthToken(data.access_token);
+      return { user: data.user, needsEmailConfirmation: false };
     }
+
+    const { data, error } = await getSupabase().auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: name, full_name: name },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    throwIfError(error);
+
+    if (!data.session) {
+      return { user: null, needsEmailConfirmation: true };
+    }
+
+    return { user: await this.getProfile(), needsEmailConfirmation: false };
   },
 
-  async signin(credentials) {
-    try {
-      const response = await api.post('/auth/signin', credentials);
-      const data = handleResponse(response);
-      if (data.token) {
-        localStorage.setItem('csehub-token', data.token);
-      }
-      return data;
-    } catch (error) {
-      return handleError(error);
+  async signin({ email, password }) {
+    if (isLocalAuthEnabled) {
+      const { data } = await api.post('/auth/signin/', { email, password });
+      setLocalAuthToken(data.access_token);
+      return { user: data.user };
     }
+
+    const { data, error } = await getSupabase().auth.signInWithPassword({ email, password });
+    throwIfError(error);
+
+    if (!data.session) throw new Error('Sign-in did not create an active session.');
+    return { user: await this.getProfile() };
   },
 
-  signout() {
-    localStorage.removeItem('csehub-token');
+  async signInWithGoogle(redirectTo = window.location.origin) {
+    clearLocalAuthToken();
+    const { error } = await getSupabase().auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo },
+    });
+    throwIfError(error);
+  },
+
+  async signout() {
+    if (getLocalAuthToken()) {
+      clearLocalAuthToken();
+      return;
+    }
+
+    const { error } = await getSupabase().auth.signOut();
+    throwIfError(error);
   },
 
   async getProfile() {
-    try {
-      const response = await api.get('/auth/profile');
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
+    const { data } = await api.get('/me/');
+    return data;
   },
 
-  async validateToken() {
-    const token = localStorage.getItem('csehub-token');
-    if (!token) return false;
-    try {
-      await api.get('/auth/validate');
-      return true;
-    } catch (error) {
-      localStorage.removeItem('csehub-token');
-      return false;
-    }
-  },
+  async getSession() {
+    const localToken = getLocalAuthToken();
+    if (localToken) return { access_token: localToken };
 
-  getToken() {
-    return localStorage.getItem('csehub-token');
-  }
+    const { data, error } = await getSupabase().auth.getSession();
+    throwIfError(error);
+    return data.session;
+  },
 };

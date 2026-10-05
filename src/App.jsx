@@ -13,8 +13,8 @@ import SignInForm from './components/features/auth/pages/SignInForm';
 import SignUpForm from './components/features/auth/pages/SignUpForm';
 import TodoPage from './pages/TodoPage';
 import AdminPage from './pages/AdminPage';
-import ArticlePage from './pages/ArticlePage';
-import { ArticlesProvider } from './context/ArticlesContext';
+import SubjectDetailPage from './pages/SubjectDetailPage';
+import { SubjectsProvider } from './context/SubjectsContext';
 
 
 
@@ -73,9 +73,9 @@ function App() {
         path: '/notes',
         element: (
           <ProtectedRoute redirectTo="/signup">
-            <div className="bg-background text-on-surface min-h-screen">
+            <div className="flex min-h-screen flex-col bg-background text-on-surface">
               <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-              <main className="pt-24 pb-20">
+              <main className="flex-1 pt-24 pb-12">
                 <NotesPage />
               </main>
               <Footer />
@@ -87,13 +87,15 @@ function App() {
       {
         path: '/todo',
         element: (
-          <div className="bg-background text-on-surface min-h-screen">
-            <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-            <main className="pt-24 pb-20">
-              <TodoPage />
-            </main>
-            <Footer />
-          </div>
+          <ProtectedRoute redirectTo="/signup">
+            <div className="flex min-h-screen flex-col bg-background text-on-surface">
+              <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+              <main className="flex-1 pt-24 pb-8">
+                <TodoPage />
+              </main>
+              <Footer />
+            </div>
+          </ProtectedRoute>
         ),
       },
       {
@@ -108,17 +110,19 @@ function App() {
         ),
       },
       {
-        path: '/article/:id',
+        path: '/subjects/:subjectId',
         element: (
-          <div className="bg-background text-on-surface min-h-screen">
-            <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-            <main className="pt-16 pb-20">
-              <ArticlePage />
-            </main>
-          </div>
+          <ProtectedRoute redirectTo="/signup">
+            <div className="bg-background text-on-surface min-h-screen">
+              <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+              <main className="pt-16 pb-20">
+                <SubjectDetailPage />
+              </main>
+              <Footer />
+            </div>
+          </ProtectedRoute>
         ),
       },
-
       {
         path: '/signin',
         element: (
@@ -138,9 +142,9 @@ function App() {
   ]);
 
   return (
-    <ArticlesProvider>
+    <SubjectsProvider>
       <RouterProvider router={router} />
-    </ArticlesProvider>
+    </SubjectsProvider>
   );
 }
 
