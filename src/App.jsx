@@ -106,6 +106,7 @@ function App() {
             <main className="pt-16 pb-20">
               <AdminPage />
             </main>
+            <Footer />
           </div>
         ),
       },

@@ -1,4 +1,6 @@
 import ReactMarkdown from 'react-markdown';
+import DOMPurify from 'dompurify';
+import 'katex/dist/katex.min.css';
 import { createHeadingId } from '../utils/subjectContentUtils';
 
 function plainText(nodes = []) {
@@ -58,6 +60,24 @@ function remarkSubjectFormatting() {
 }
 
 function SubjectMarkdown({ content }) {
+  const isRichHtml = /<\/?(?:p|h[1-6]|ul|ol|li|blockquote|pre|div|span|strong|em|u|s|a|br)\b/i.test(content);
+  if (isRichHtml) {
+    const cleanHtml = DOMPurify.sanitize(content, { ADD_ATTR: ['data-value'] });
+    const documentContent = new DOMParser().parseFromString(cleanHtml, 'text/html');
+    const headingCounts = new Map();
+    documentContent.body.querySelectorAll('h1, h2, h3').forEach((heading) => {
+      heading.id = createHeadingId(heading.textContent, headingCounts);
+    });
+    const safeHtml = DOMPurify.sanitize(documentContent.body.innerHTML, { ADD_ATTR: ['data-value'] });
+
+    return (
+      <div
+        className="rich-content break-words space-y-4 text-sm leading-7 text-slate-700"
+        dangerouslySetInnerHTML={{ __html: safeHtml }}
+      />
+    );
+  }
+
   return (
     <div className="break-words space-y-4 text-sm leading-7 text-slate-700">
       <ReactMarkdown

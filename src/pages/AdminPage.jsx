@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSubjects } from '../context/SubjectsContext';
 import SubjectMarkdown from '../components/SubjectMarkdown';
+
+const RichContentEditor = lazy(() => import('../components/RichContentEditor'));
 
 const DOMAINS = ['DSA', 'Web Development', 'Machine Learning', 'Systems', 'Programming'];
 const LANGUAGES = ['JavaScript', 'Python', 'Java', 'C++'];
@@ -35,6 +37,12 @@ function AdminPage() {
   const [notice, setNotice] = useState('');
   const [actionError, setActionError] = useState('');
   const [saving, setSaving] = useState(false);
+  const contentWordCount = form.content_markdown
+    .replace(/<[^>]*>/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .length;
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
@@ -164,24 +172,23 @@ function AdminPage() {
               <span className={`${iconClass} text-cyan-300`}>auto_awesome</span>
               Subtitle Content
             </h2>
-            <span className="rounded border border-emerald-400/20 bg-emerald-400/5 px-2 py-1 font-mono text-[10px] font-semibold text-emerald-300">MARKDOWN ENABLED</span>
+            <span className="rounded border border-emerald-400/20 bg-emerald-400/5 px-2 py-1 font-mono text-[10px] font-semibold text-emerald-300">RICH TEXT ENABLED</span>
           </div>
           {preview ? (
             <div className="min-h-[40rem] bg-[#f1f1f1] p-5 text-black">
               <SubjectMarkdown content={form.content_markdown || '*Markdown preview will appear here.*'} />
             </div>
           ) : (
-            <textarea
-              rows={30}
-              className="min-h-[40rem] w-full resize-y bg-[#f1f1f1] p-5 font-mono text-sm leading-7 text-black placeholder:text-slate-500 focus:outline-none"
-              placeholder="Paste your structured prompt output or markdown documentation here..."
-              value={form.content_markdown}
-              onChange={(event) => updateField('content_markdown', event.target.value)}
-            />
+            <Suspense fallback={<div className="min-h-[40rem] bg-white p-5 text-slate-500">Loading editor...</div>}>
+              <RichContentEditor
+                value={form.content_markdown}
+                onChange={(content) => updateField('content_markdown', content)}
+              />
+            </Suspense>
           )}
           <div className="flex items-center justify-between border-t border-slate-700/60 px-4 py-3 font-mono text-[11px] text-slate-400">
             <span className={form.is_active ? 'text-emerald-300' : 'text-amber-300'}>● {form.is_active ? 'Active' : 'Draft'}</span>
-            <span>{form.content_markdown.trim() ? form.content_markdown.trim().split(/\s+/).length : 0} words · ~{Math.ceil(form.content_markdown.trim().split(/\s+/).filter(Boolean).length / 200)} min read</span>
+            <span>{contentWordCount} words · ~{Math.ceil(contentWordCount / 200)} min read</span>
             <button type="button" onClick={() => setPreview((current) => !current)} className="font-semibold text-sky-300 hover:text-sky-200">
               {preview ? 'Edit Markdown' : 'Preview Markdown'}
             </button>
