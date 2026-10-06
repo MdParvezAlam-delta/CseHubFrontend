@@ -2,8 +2,9 @@ import ReactMarkdown from 'react-markdown';
 import { createHeadingId } from '../utils/subjectContentUtils';
 
 function plainText(nodes = []) {
+  if (!Array.isArray(nodes)) return '';
   return nodes.map((node) => (
-    node.type === 'text' ? node.value : plainText(node.children)
+    node?.type === 'text' ? node.value : plainText(node?.children)
   )).join('');
 }
 
