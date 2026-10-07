@@ -57,16 +57,14 @@ export const authService = {
     });
     throwIfError(error);
 
-    // Wait for the OAuth flow to complete and return the session
-    return await new Promise((resolve, reject) => {
-      const { data: authData, error: authError } = await getSupabase().auth.getSession();
-      if (authError) reject(authError);
-      if (authData?.session) {
-        resolve({ user: authData.session.user, needsEmailConfirmation: false });
-      } else {
-        reject(new Error('Sign-in did not create an active session.'));
-      }
-    });
+    // Directly await the session instead of wrapping in Promise
+    const { data: authData, error: authError } = await getSupabase().auth.getSession();
+    throwIfError(authError);
+
+    if (authData?.session) {
+      return { user: authData.session.user, needsEmailConfirmation: false };
+    }
+    throw new Error('Sign-in did not create an active session.');
   },
 
   async signout() {
