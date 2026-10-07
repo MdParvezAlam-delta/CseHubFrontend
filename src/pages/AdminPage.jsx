@@ -29,7 +29,7 @@ const panelClass = 'overflow-hidden rounded-xl border border-slate-700/60 bg-[#1
 const iconClass = 'material-symbols-outlined';
 
 function AdminPage() {
-  const { saveSubject } = useSubjects();
+  const { saveSubject, subjects, deleteSubject } = useSubjects();
   const [form, setForm] = useState(() => createEmptyForm());
   const [editingId, setEditingId] = useState(null);
   const [activeLanguage, setActiveLanguage] = useState(LANGUAGES[0]);
@@ -37,6 +37,9 @@ function AdminPage() {
   const [notice, setNotice] = useState('');
   const [actionError, setActionError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [subjectToDelete, setSubjectToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const contentWordCount = form.content_markdown
     .replace(/<[^>]*>/g, ' ')
     .trim()
@@ -82,6 +85,21 @@ function AdminPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     await persistSubject();
+  };
+
+  const confirmDelete = async () => {
+    if (!subjectToDelete) return;
+    setDeleting(true);
+    setActionError('');
+    try {
+      await deleteSubject(subjectToDelete.id);
+      setSubjectToDelete(null);
+      setNotice(`"${subjectToDelete.name}" was deleted.`);
+    } catch (error) {
+      setActionError(error.message);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -237,8 +255,97 @@ function AdminPage() {
             </button>
           </div>
         </section>
+
+        {/* History Section */}
+        <section className={panelClass}>
+          <div className="flex items-center justify-between px-4 py-4 sm:px-5">
+            <div className="flex items-center gap-2">
+              <h2 className="flex items-center gap-2 text-base font-bold text-slate-100">
+                <span className={`${iconClass} text-violet-300`}>history</span>
+                History
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowHistory(!showHistory)}
+                className="ml-auto font-mono text-xs font-semibold text-sky-300 hover:text-sky-200"
+              >
+                {showHistory ? 'Hide History' : 'Show History'}
+              </button>
+            </div>
+          </div>
+
+          {showHistory && (
+            <div className="border-t border-slate-700/60 p-4">
+              {subjects.length === 0 ? (
+                <p className="text-center text-slate-500 py-8">No subjects published yet.</p>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {subjects
+                    .slice()
+                    .sort((a, b) => new Date(b.publish_date || b.created_at) - new Date(a.publish_date || a.created_at))
+                    .map((subject) => (
+                      <div
+                        key={subject.id}
+                        className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/60 bg-[#111a2c] p-3"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-slate-100 truncate">{subject.name}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            {subject.domain} • {new Date(subject.publish_date || subject.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSubjectToDelete(subject)}
+                          className="flex-shrink-0 rounded-md border border-red-500/50 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/20 transition disabled:opacity-50"
+                        >
+                          <span className={`${iconClass} text-xs mr-1`}>delete</span>
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
       </form>
     </div>
+    {subjectToDelete && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <section
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="delete-subject-title"
+          className="w-full max-w-md rounded-xl border border-slate-700 bg-[#141e31] p-6 shadow-2xl"
+        >
+          <h2 id="delete-subject-title" className="text-lg font-bold text-white">Delete subject?</h2>
+          <p className="mt-2 text-sm text-slate-300">
+            Delete “{subjectToDelete.name}”? This will permanently remove it from the catalog and database.
+          </p>
+          {actionError && <p role="alert" className="mt-3 text-sm text-rose-300">{actionError}</p>}
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={() => setSubjectToDelete(null)}
+              className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-200 hover:bg-white/5 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={confirmDelete}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </button>
+          </div>
+        </section>
+      </div>
+    )}
     </div>
   );
 }
