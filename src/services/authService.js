@@ -32,7 +32,7 @@ export const authService = {
       return { user: null, needsEmailConfirmation: true };
     }
 
-    return { user: await this.getProfile(), needsEmailConfirmation: false };
+    return { user: await this.getProfile(data.session?.access_token), needsEmailConfirmation: false };
   },
 
   async signin({ email, password }) {
@@ -42,11 +42,11 @@ export const authService = {
       return { user: data.user };
     }
 
-    const { data, error } = await getSupabase().auth.signInWithPassword({ email, password });
+  const { data, error } = await getSupabase().auth.signInWithPassword({ email, password });
     throwIfError(error);
 
     if (!data.session) throw new Error('Sign-in did not create an active session.');
-    return { user: await this.getProfile() };
+    return { user: await this.getProfile(data.session.access_token) };
   },
 
   async signInWithGoogle(redirectTo = window.location.origin) {
@@ -68,8 +68,11 @@ export const authService = {
     throwIfError(error);
   },
 
-  async getProfile() {
-    const { data } = await api.get('/me/');
+  async getProfile(accessToken = null) {
+    const config = accessToken
+      ? { headers: { Authorization: `Bearer ${accessToken}` } }
+      : {};
+    const { data } = await api.get('/me/', config);
     return data;
   },
 
