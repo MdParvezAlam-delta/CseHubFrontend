@@ -42,7 +42,7 @@ export const authService = {
       return { user: data.user };
     }
 
-  const { data, error } = await getSupabase().auth.signInWithPassword({ email, password });
+    const { data, error } = await getSupabase().auth.signInWithPassword({ email, password });
     throwIfError(error);
 
     if (!data.session) throw new Error('Sign-in did not create an active session.');
@@ -53,9 +53,20 @@ export const authService = {
     clearLocalAuthToken();
     const { error } = await getSupabase().auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo },
+      options: { redirectTo, queryParams: { prompt: 'select_account' } },
     });
     throwIfError(error);
+
+    // Wait for the OAuth flow to complete and return the session
+    return await new Promise((resolve, reject) => {
+      const { data: authData, error: authError } = await getSupabase().auth.getSession();
+      if (authError) reject(authError);
+      if (authData?.session) {
+        resolve({ user: authData.session.user, needsEmailConfirmation: false });
+      } else {
+        reject(new Error('Sign-in did not create an active session.'));
+      }
+    });
   },
 
   async signout() {
