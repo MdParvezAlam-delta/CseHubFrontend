@@ -7,21 +7,43 @@ import Pagination from './common/Pagination';
 
 const ITEMS_PER_PAGE = 12;
 
+// Domain taxonomy matching backend apps/subjects/models.py DOMAINS
+const DOMAIN_TAXONOMY = {
+  all: { code: 'all', label: 'All' },
+  DSA: { code: 'DSA', label: 'DSA' },
+  'Web Development': { code: 'Web Development', label: 'Web Development' },
+  'Machine Learning': { code: 'Machine Learning', label: 'Machine Learning' },
+  Systems: { code: 'Systems', label: 'Systems' },
+  Programming: { code: 'Programming', label: 'Programming' },
+};
+
 function SubjectCatalog() {
   const { isAuthenticated } = useAuth();
   const { subjects, loading, error } = useSubjects();
   const [searchParams] = useSearchParams();
   const searchQuery = (searchParams.get('q') || '').trim().toLowerCase();
   const [pageState, setPageState] = useState({ query: searchQuery, page: 1 });
+  const [selectedDomain, setSelectedDomain] = useState('all');
   const currentPage = pageState.query === searchQuery ? pageState.page : 1;
 
   const filteredSubjects = useMemo(() => {
-    if (!searchQuery) return subjects;
-    return subjects.filter((subject) => (
-      subject.name.toLowerCase().includes(searchQuery)
-      || subject.description.toLowerCase().includes(searchQuery)
-    ));
-  }, [subjects, searchQuery]);
+    let result = subjects;
+
+    // Apply domain filter
+    if (selectedDomain !== 'all') {
+      result = result.filter((subject) => subject.domain === selectedDomain);
+    }
+
+    // Apply search filter
+    if (searchQuery) {
+      result = result.filter((subject) => (
+        subject.name.toLowerCase().includes(searchQuery)
+        || subject.description.toLowerCase().includes(searchQuery)
+      ));
+    }
+
+    return result;
+  }, [subjects, searchQuery, selectedDomain]);
 
   const visibleSubjects = filteredSubjects.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -47,6 +69,25 @@ function SubjectCatalog() {
                 Showing results for "{searchQuery}" ({filteredSubjects.length} found)
               </p>
             )}
+            {/* Domain Taxonomy Filter Tabs */}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {Object.values(DOMAIN_TAXONOMY).map((domain) => (
+                <button
+                  key={domain.code}
+                  onClick={() => {
+                    setSelectedDomain(domain.code);
+                    setPageState({ query: searchQuery, page: 1 });
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all border ${
+                    selectedDomain === domain.code
+                      ? 'bg-primary text-on-primary border-primary'
+                      : 'bg-[#0b1426] text-slate-400 border-[#22314c] hover:text-cyan-400 hover:border-cyan-400/40'
+                  }`}
+                >
+                  {domain.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

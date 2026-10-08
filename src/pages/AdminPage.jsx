@@ -89,12 +89,13 @@ function AdminPage() {
 
   const confirmDelete = async () => {
     if (!subjectToDelete) return;
+    const subjectName = subjectToDelete.name;
     setDeleting(true);
     setActionError('');
     try {
       await deleteSubject(subjectToDelete.id);
       setSubjectToDelete(null);
-      setNotice(`"${subjectToDelete.name}" was deleted.`);
+      setNotice(`"${subjectName}" was deleted.`);
     } catch (error) {
       setActionError(error.message);
     } finally {
